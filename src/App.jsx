@@ -3,42 +3,44 @@ import logo from './logo.svg';
 import './App.css';
 import { useQuery } from 'react-query';
 
-function Button() {
-  const { data, error } = useQuery('hello world', () => {
-    return new Promise((resolve) => {
-      setTimeout(() => resolve(Math.random()), 1000);
-    });
-  });
-
-  console.log({ data, error });
-  return <button>I am a button {data}</button>;
-}
+const fetcher = (repo) => {
+  return fetch(`https://api.github.com/repos/${repo}`).then((res) =>
+    res.json()
+  );
+};
 
 function App() {
-  const [visible, setVisible] = useState(true);
+  const [repoName, setRepoName] = useState('');
 
-  function toggleButton() {
-    setVisible((visible) => !visible);
+  const { isLoading, data } = useQuery(['github-data', repoName], () =>
+    fetcher(repoName)
+  );
+
+  if (isLoading) {
+    return (
+      <div className='App'>
+        <input
+          type='text'
+          value={repoName}
+          onChange={(e) => setRepoName(e.target.value)}
+        />
+        <h2>Loading...</h2>
+      </div>
+    );
   }
 
   return (
     <div className='App'>
-      <header className='App-header'>
-        {visible && <Button />}
-        <button onClick={toggleButton}>toggle button</button>
-        <img src={logo} className='App-logo' alt='logo' />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <span
-          className='App-link'
-          href='https://reactjs.org'
-          target='_blank'
-          rel='noopener noreferrer'
-        >
-          Hello from codedamn
-        </span>
-      </header>
+      <input
+        type='text'
+        value={repoName}
+        onChange={(e) => setRepoName(e.target.value)}
+      />
+      <h2>Name: {data.name}</h2>
+      <div>
+        <h2>Description</h2>
+        <p>{data.description}</p>
+      </div>
     </div>
   );
 }
