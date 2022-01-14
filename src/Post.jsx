@@ -3,8 +3,12 @@ import { useQuery } from 'react-query';
 import { fetcher } from './App';
 
 const Post = ({ postId, goBack }) => {
-  const { isLoading, data: post } = useQuery(['post', postId], () =>
-    fetcher(`https://jsonplaceholder.typicode.com/posts/${postId}`)
+  const { isLoading, data: post } = useQuery(
+    ['post', postId],
+    () => fetcher(`https://jsonplaceholder.typicode.com/posts/${postId}`),
+    {
+      staleTime: Infinity,
+    }
   );
 
   return (

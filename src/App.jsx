@@ -21,6 +21,17 @@ function App() {
     return <Post postId={postId} goBack={() => setPostId(null)} />;
   }
 
+  function mutateTitle(id) {
+    client.setQueryData(['post', id], (oldData) => {
+      if (oldData) {
+        return {
+          ...oldData,
+          title: 'boom boom boom mutated',
+        };
+      }
+    });
+  }
+
   return (
     <div className='App'>
       {isLoading ? (
@@ -35,6 +46,7 @@ function App() {
                 {post.id} - {post.title}
               </a>
               {cachedPost ? '(visited)' : ''}
+              <button onClick={() => mutateTitle(post.id)}>Mutate Title</button>
             </p>
           );
         })
