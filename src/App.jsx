@@ -1,50 +1,75 @@
 import React from 'react';
 import './App.css';
-import { useMutation } from 'react-query';
+import { useQuery, useMutation } from 'react-query';
+import client from './react-query-client';
 
-export const fetcher = (url) => fetch(url).then((res) => res.json());
-const timer = (duration, param) => {
-  return new Promise((resolve, reject) => {
-    setTimeout(() => {
-      reject('yooo');
-      console.log('hello from timer', { param });
-    }, duration);
+const baseUrl = 'http://localhost:1337';
+
+const fetcher = (url, body) =>
+  fetch(url, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
   });
-};
 
 function App() {
-  const mutation = useMutation((param) => timer(1000, param), {
-    onSuccess(data) {
-      console.log('request is complete from mutate', { data });
-    },
-    onError(error) {
-      console.log('error completing request from mutate', { error });
-    },
-    onSettled(data, error) {
-      console.log('request either successful or erred from mutate');
-    },
-  });
-
-  function callMutation() {
-    console.log('updating post');
-    mutation.mutate(90, {
+  const [inputLang, setInputLang] = React.useState('');
+  const mutation = useMutation(
+    (body) => fetcher(`${baseUrl}/api/add-record`, body),
+    {
       onSuccess(data) {
-        console.log('request is complete from mutate', { data });
+        console.log('Got response from backend', data);
+        setInputLang('');
+        client.invalidateQueries('favLangs');
       },
       onError(error) {
-        console.log('error completing request from mutate', { error });
+        console.log('Got error from backend', error);
       },
-      onSettled(data, error) {
-        console.log('request either successful or erred from mutate');
-      },
-    });
-    console.log('post updated');
+    }
+  );
+
+  const {
+    data: favLangs,
+    isLoading,
+    isError,
+  } = useQuery(
+    'favLangs',
+    () => {
+      return fetch(`${baseUrl}/api/get-records`).then((t) => t.json());
+    },
+    {
+      select: (data) => data.langs,
+    }
+  );
+
+  function callMutation() {
+    mutation.mutate({ record: inputLang });
+  }
+
+  if (isError) {
+    return <p>Error with request</p>;
   }
 
   return (
     <div className='App'>
-      <h1>Mutations</h1>
-      <button onClick={callMutation}>Submit</button>
+      {isLoading ? (
+        <h1>Loading...</h1>
+      ) : (
+        <>
+          <h1>Some favorite languages</h1>
+          {favLangs.map((lang) => {
+            return <li key={lang}>{lang}</li>;
+          })}
+          <input
+            type='text'
+            value={inputLang}
+            onChange={(e) => setInputLang(e.target.value)}
+          />
+          <button onClick={callMutation}>Submit</button>
+        </>
+      )}
     </div>
   );
 }
