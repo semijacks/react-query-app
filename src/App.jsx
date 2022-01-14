@@ -1,31 +1,43 @@
-import React, { useState } from 'react';
+import React from 'react';
 import './App.css';
 import { useMutation } from 'react-query';
-import Post from './Post';
-import client from './react-query-client';
 
 export const fetcher = (url) => fetch(url).then((res) => res.json());
-const timer = (duration) => {
+const timer = (duration, param) => {
   return new Promise((resolve, reject) => {
     setTimeout(() => {
       reject('yooo');
+      console.log('hello from timer', { param });
     }, duration);
   });
 };
 
 function App() {
-  const mutation = useMutation(() => timer(1000), {
+  const mutation = useMutation((param) => timer(1000, param), {
     onSuccess(data) {
-      console.log('request is complete', { data });
+      console.log('request is complete from mutate', { data });
     },
-    onError(err) {
-      console.log('error completing request', { err });
+    onError(error) {
+      console.log('error completing request from mutate', { error });
+    },
+    onSettled(data, error) {
+      console.log('request either successful or erred from mutate');
     },
   });
 
-  async function callMutation() {
+  function callMutation() {
     console.log('updating post');
-    await mutation.mutateAsync();
+    mutation.mutate(90, {
+      onSuccess(data) {
+        console.log('request is complete from mutate', { data });
+      },
+      onError(error) {
+        console.log('error completing request from mutate', { error });
+      },
+      onSettled(data, error) {
+        console.log('request either successful or erred from mutate');
+      },
+    });
     console.log('post updated');
   }
 
