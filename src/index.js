@@ -3,10 +3,9 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 // import reportWebVitals from './reportWebVitals';
-import { QueryClient, QueryClientProvider } from 'react-query';
+import { QueryClientProvider } from 'react-query';
 import { ReactQueryDevtools } from 'react-query/devtools';
-
-const client = new QueryClient();
+import client from './react-query-client';
 
 ReactDOM.render(
   <QueryClientProvider client={client}>

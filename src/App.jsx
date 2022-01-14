@@ -1,46 +1,40 @@
 import React, { useState } from 'react';
-import logo from './logo.svg';
 import './App.css';
 import { useQuery } from 'react-query';
+import Post from './Post';
+import client from './react-query-client';
 
-const fetcher = (repo) => {
-  return fetch(`https://api.github.com/repos/${repo}`).then((res) =>
-    res.json()
-  );
-};
+export const fetcher = (url) => fetch(url).then((res) => res.json());
 
 function App() {
-  const [repoName, setRepoName] = useState('');
+  const [postId, setPostId] = useState(null);
 
-  const { isLoading, data } = useQuery(['github-data', repoName], () =>
-    fetcher(repoName)
+  const { isLoading, data: posts } = useQuery('posts', () =>
+    fetcher(`https://jsonplaceholder.typicode.com/posts`)
   );
 
-  if (isLoading) {
-    return (
-      <div className='App'>
-        <input
-          type='text'
-          value={repoName}
-          onChange={(e) => setRepoName(e.target.value)}
-        />
-        <h2>Loading...</h2>
-      </div>
-    );
+  if (postId !== null) {
+    return <Post postId={postId} goBack={() => setPostId(null)} />;
   }
 
   return (
     <div className='App'>
-      <input
-        type='text'
-        value={repoName}
-        onChange={(e) => setRepoName(e.target.value)}
-      />
-      <h2>Name: {data.name}</h2>
-      <div>
-        <h2>Description</h2>
-        <p>{data.description}</p>
-      </div>
+      {isLoading ? (
+        <h1>Loading...</h1>
+      ) : (
+        posts.map((post) => {
+          const cachedPost = client.getQueryData(['post', post.id]);
+
+          return (
+            <p key={post.id}>
+              <a onClick={() => setPostId(post.id)} href='#'>
+                {post.id} - {post.title}
+              </a>
+              {cachedPost ? '(visited)' : ''}
+            </p>
+          );
+        })
+      )}
     </div>
   );
 }
